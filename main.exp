@@ -1,0 +1,25 @@
+#!/usr/bin/env expect
+
+spawn chromium --headless --disable-gpu --repl [lindex $argv 0]
+
+expect {
+    {*>>>*} {
+        send "document.querySelector('#zanpiancms_player > iframe').contentDocument.querySelector('#a1 > video').src\n"
+    }
+}
+
+expect {
+    {{*}} {
+        set m3u8_url [exec echo $expect_out(0,string) | jq -r .result.value]
+        exp_continue
+    }
+    {*>>>*} {
+        send "quit\n"
+        exp_continue
+    }
+    eof {
+        wait
+        spawn mpv $m3u8_url
+        interact
+    }
+}
